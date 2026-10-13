@@ -150,6 +150,17 @@ static inline int lib_touch(const void *p)
 	return 0;
 }
 
+/* Write one byte so an anonymous zero page takes its COW now. */
+static inline int lib_cow_touch(void *p)
+{
+	if (sigsetjmp(lib_faultskip_env, 1))
+		return -1;
+	lib_faultskip_armed = 1;
+	*(volatile unsigned char *)p = *(volatile unsigned char *)p;
+	lib_faultskip_armed = 0;
+	return 0;
+}
+
 /* Read eight bytes. 0 with *out set, or -1 if the access faulted. */
 static inline int lib_peek64(const void *p, unsigned long long *out)
 {
@@ -221,7 +232,14 @@ static inline unsigned long long lib_prefault_self_counted(
 			continue;
 		madvise((void *)(uintptr_t)lo, (size_t)(hi - lo), MADV_WILLNEED);
 		for (unsigned long long a = lo; a < hi; a += 4096) {
-			if (lib_touch((const void *)(uintptr_t)a) == 0)
+			/* Write-touch writable mappings so the COW happens here,
+			 * not after the redirect. */
+			int r;
+			if (perms[1] == 'w' && path[0] != '/')
+				r = lib_cow_touch((void *)(uintptr_t)a);
+			else
+				r = lib_touch((const void *)(uintptr_t)a);
+			if (r == 0)
 				touched++;
 			else
 				skipped++;
