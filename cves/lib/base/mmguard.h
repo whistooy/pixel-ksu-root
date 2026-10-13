@@ -150,6 +150,24 @@ static inline int lib_touch(const void *p)
 	return 0;
 }
 
+/* WRITE one byte, for its side effect of taking the COW on anonymous
+ * zero-page mappings. A read only maps the SHARED zero page -- the first
+ * later WRITE then faults through whatever tree mm_mt holds, which
+ * post-redirect is unserviceable. Found as a cold-.bss static killing a
+ * landed reader hit after a relink on the first resolved-page device port;
+ * the class is layout-dependent and can strike any target. 0 if written,
+ * -1 if the access faulted (caller must only use this on writable, private
+ * mappings). */
+static inline int lib_cow_touch(void *p)
+{
+	if (sigsetjmp(lib_faultskip_env, 1))
+		return -1;
+	lib_faultskip_armed = 1;
+	*(volatile unsigned char *)p = *(volatile unsigned char *)p;
+	lib_faultskip_armed = 0;
+	return 0;
+}
+
 /* Read eight bytes. 0 with *out set, or -1 if the access faulted. */
 static inline int lib_peek64(const void *p, unsigned long long *out)
 {
@@ -221,7 +239,18 @@ static inline unsigned long long lib_prefault_self_counted(
 			continue;
 		madvise((void *)(uintptr_t)lo, (size_t)(hi - lo), MADV_WILLNEED);
 		for (unsigned long long a = lo; a < hi; a += 4096) {
-			if (lib_touch((const void *)(uintptr_t)a) == 0)
+			/* Writable private mappings get a WRITE touch so anonymous
+			 * zero pages take their COW NOW, while faults still resolve --
+			 * a read leaves them on the shared zero page and a later first
+			 * write faults through the forged tree. path[0] != '/' keeps
+			 * this to anonymous mappings: a file-backed mapping's COW is
+			 * not ours to take here. */
+			int r;
+			if (perms[1] == 'w' && path[0] != '/')
+				r = lib_cow_touch((void *)(uintptr_t)a);
+			else
+				r = lib_touch((const void *)(uintptr_t)a);
+			if (r == 0)
 				touched++;
 			else
 				skipped++;
