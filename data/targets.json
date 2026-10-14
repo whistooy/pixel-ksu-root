@@ -2,6 +2,14 @@
   "comment": "Kernel-offset-driven exploit selection. One payload per unique offset group; many Pixel devices share a group.  Ship payload file names follow the same shape as every other artifact: cve-<id>-<chain>-<what distinguishes this build>.",
   "devices": [
     {
+      "codename": "CPH2581",
+      "build": "15.0.0.860",
+      "kernel": "6.1.118-android14-11-o-g818f2506c9e7",
+      "kmi": "android14-6.1",
+      "payload": "CPH2581-15.0.0.860",
+      "fingerprint": "OnePlus/CPH2581EEA/OP595DL1:15/AP3A.240617.008/U.R4T3.394441b-19c1836-19c196e:user/release-keys"
+    },
+    {
       "codename": "akita",
       "build": "CP2A.260805.005",
       "kernel": "6.1.157-android14-11-gbd23337e42e7-ab14791245",
@@ -179,6 +187,11 @@
     }
   ],
   "payloads": {
+    "CPH2581-15.0.0.860": {
+      "kmi": "android14-6.1",
+      "build_from": "CPH2581-15.0.0.860",
+      "file": "cve-2026-43049-ffwheel-CPH2581-15.0.0.860"
+    },
     "android14-6.1": {
       "kmi": "android14-6.1",
       "build_from": "bluejay-CP2A.260705.006",

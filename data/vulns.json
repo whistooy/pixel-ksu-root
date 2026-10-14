@@ -28,6 +28,12 @@
         ]
       },
       "kernels": {
+        "6.1.118-android14-11-o-g818f2506c9e7": {
+          "verdict": "vulnerable",
+          "checked": "2026-10-08",
+          "method": "source",
+          "evidence": "candidate Image (boot SHA-256 c07125dc7048af293a24be05ff037a31a597fdd67c43042b6811d6ba05c5ccfb) hidpp_probe@0x7a4c30: inlined hidpp_ff_init rejects ll_driver != &usb_hid_driver ('device is not USB'), returns -ENODEV after hid_hw_close without hid_hw_stop; the fix marker 'ret = 0;' is absent. Recorded from the port campaign's instruction-level Image analysis"
+        },
         "6.1.145-android14-11-gfa1d6308d1fe-ab14691759": {
           "verdict": "vulnerable",
           "checked": "2026-09-19",
