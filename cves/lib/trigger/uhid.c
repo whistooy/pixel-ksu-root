@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -77,6 +78,15 @@ int lib_uhid_run_until_close(int fd, int (*answer)(const unsigned char *out),
 		if (read(fd, &ev, sizeof(ev)) != (ssize_t)sizeof(ev))
 			return -1;
 
+		{ /* FFWHEEL_UHID_DEBUG: log every event. */
+			static int dbg = -1;
+			if (dbg < 0) dbg = (getenv("FFWHEEL_UHID_DEBUG") != NULL);
+			if (dbg) {
+				printf("UHID_EVENT type=%u waited=%dms\n",
+				       (unsigned)ev.type, waited);
+				fflush(stdout);
+			}
+		}
 		if (ev.type == UHID_OUTPUT) {
 			if (answer && answer(ev.u.output.data) < 0)
 				return -1;
