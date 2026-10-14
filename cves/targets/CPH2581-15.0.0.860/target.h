@@ -30,4 +30,43 @@
 #include "../kernel/CPH2581-15.0.0.860.h"
 #include "../kmi/android14-6.1.h"
 
+/* Launch defaults from the 2026-10-13 A/B census; the environment
+ * overrides each. */
+#ifndef FFWHEEL_T_SPRAY_CAP_MB
+#define FFWHEEL_T_SPRAY_CAP_MB 4096
+#endif
+#ifndef FFWHEEL_T_KEEP_FREE_MB
+#define FFWHEEL_T_KEEP_FREE_MB 2048
+#endif
+#ifndef FFROOT_T_TRIGGER_TRIES
+#define FFROOT_T_TRIGGER_TRIES 12
+#endif
+#ifndef FFREAD_T_GUESS_ORACLE
+#define FFREAD_T_GUESS_ORACLE 1
+#endif
+#ifndef FFREAD_T_ORACLE_METHOD
+#define FFREAD_T_ORACLE_METHOD "direct"
+#endif
+#ifndef FFREAD_T_CROSS_NSPRAY
+#define FFREAD_T_CROSS_NSPRAY 16
+#endif
+#ifndef FFROOT_T_CROSS_NSPRAY
+#define FFROOT_T_CROSS_NSPRAY 512
+#endif
+#ifndef FFROOT_T_RESOLVED_PAGE
+#define FFROOT_T_RESOLVED_PAGE 1
+#endif
+#ifndef FFROOT_T_FULL
+#define FFROOT_T_FULL 1
+#endif
+#ifndef FFROOT_T_NEUT
+#define FFROOT_T_NEUT 1
+#endif
+#ifndef FFROOT_T_W_SHELL
+#define FFROOT_T_W_SHELL 1
+#endif
+#ifndef FFWHEEL_T_READER_TRIES
+#define FFWHEEL_T_READER_TRIES 3
+#endif
+
 #endif /* OFFSET_H */
