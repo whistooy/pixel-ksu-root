@@ -542,6 +542,18 @@ if [ "$INVOKE_KIND" = device-exec ]; then
   fi
   apush_verified "$ENTRY_ARTIFACT" "$DEV_ENTRY" || exit 2
   ash "chmod ${ENTRY_MODE:-755} $DEV_ENTRY" 2>/dev/null
+  # Per-target extras (data/targets.json "extras"): files that belong next to
+  # the entry on the device (ffwheel's capture feed).
+  for x in ${ENTRY_EXTRAS:-}; do
+    if [ ! -f "$REPO/$x" ]; then
+      err "entry extra missing: $x"
+      exit 2
+    fi
+    apush_verified "$REPO/$x" "$DEV_TMP/$(basename "$x")" || exit 2
+    case "$x" in
+      *.sh) ash "chmod 755 $DEV_TMP/$(basename "$x")" 2>/dev/null ;;
+    esac
+  done
   # A device-exec entry that runs the exploit payload (the bench forks
   # cve-helper --run-payload exploit-payload.so) declares needs_payload, so the
   # freshly built payload and helper are staged here too -- apush_verified

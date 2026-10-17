@@ -431,6 +431,21 @@ def device_kernel(target):
     return None
 
 
+def device_field(target, key, default):
+    """One optional field of the target's data/targets.json row.
+
+    payload_env: launch knobs the row seeds below any operator --tunable.
+    extras: files staged next to the entry on the device."""
+    if not os.path.exists(TARGETS_JSON):
+        die("ARCH-G0-SCHEMA", "data/targets.json not found")
+    with open(TARGETS_JSON) as f:
+        data = json.load(f)
+    for d in data.get("devices", []):
+        if "%s-%s" % (d["codename"], d["build"]) == target:
+            return d.get(key, default)
+    return default
+
+
 
 def effective_target_header(target):
     """The header a build for `target` compiles against.
@@ -1117,6 +1132,20 @@ def main():
         c = contract_of(entry_id, stages[entry_id], target, stages,
                         stages[entry_id]["build"])
         mk = c["markers"]
+        target_env = device_field(target, "payload_env", "")
+        if not isinstance(target_env, str):
+            die("ARCH-G0-SCHEMA",
+                "target %r payload_env must be a string" % target)
+        extras = device_field(target, "extras", [])
+        if not isinstance(extras, list) or not all(
+                isinstance(e, str) for e in extras):
+            die("ARCH-G0-SCHEMA",
+                "target %r extras must be a list of repo-relative paths" % target)
+        for e in extras:
+            if not os.path.exists(os.path.join(ROOT, e)):
+                die("ARCH-G0-SCHEMA",
+                    "target %r extras path missing: %s" % (target, e),
+                    "extras are repo-root-relative files the runner pushes")
         out = [
             ("RUN_RECIPE", recipe_name),
             ("RUN_TARGET", target),
@@ -1136,6 +1165,9 @@ def main():
             ("RUN_INVOKE_ARTIFACT", c["artifact"]),
             ("RUN_INVOKE_DEST", c["dest"]),
             ("RUN_INVOKE_MODE", c["mode"]),
+            # Per-target row facts: launch env and files pushed with the entry.
+            ("RUN_TARGET_ENV", target_env),
+            ("RUN_EXTRAS", " ".join(extras)),
             # The knob set, and its types and domains, as data the runner
             # validates --tunable against. RUN_TUNABLE_SPEC entries are
             # NAME|type|domain, domain being "a,b" for an enum, "min,max" for

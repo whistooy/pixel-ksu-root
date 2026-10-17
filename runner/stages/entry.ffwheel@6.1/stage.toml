@@ -153,10 +153,12 @@ mode = "755"
 # the guess too, so it converts misses into roots and panics in whatever ratio
 # the guess has. Kept low for that reason.
 # FFREAD_GUESS_ORACLE: put the reader's guessed page to one cross-cache-placed
-# read before any wake is pointed at it. A refuted guess then ends the shot as a
-# miss instead of a panic, and a confirmed one makes the reader's retries as cheap
+# read before any wake is pointed at it. A refuted guess then ends the shot as
+# a miss instead of a panic, and a confirmed one makes the reader's retries as cheap
 # as the writer's. Off by default: the groom runs before the spray and its cost
 # is bounded, and this path is not measured.
+# These pins are the untuned default: a target row's payload_env overrides
+# them, and --tunable overrides both.
 command = "cd @DEV_TMP@; FFREAD_GUESS_ORACLE=0 FFROOT_RESOLVED_PAGE=1 FFROOT_TRIGGER_TRIES=8 FFWHEEL_READER_TRIES=3 FFROOT_ENFORCE0=1 FFROOT_NEUT=1 FFROOT_KSU_TRIES=3 FFROOT_KSUD=@DEV_KSUD@ FFROOT_KMI=@KMI@ FFROOT_MANAGER_PKG=@MANAGER_PKG@ @KASLR_ENV@@DEV_ENTRY@ > @DEV_LOG@ 2>&1"
 accepts_base = true
 needs_root = false
@@ -195,5 +197,14 @@ description = "fresh boot per shot: full MemAvailable and no leaked/parked-half 
 [[setup]]
 reboot = false
 command = "echo ffwheel-setup uptime=$(cut -d. -f1 /proc/uptime)s /dev/input node count $(ls /dev/input | wc -l)"
+needs_root = false
+once_per_boot = false
+
+# The capture feed appends to pre-created files (the landed session cannot
+# create under enforcing): recreate them every shot.
+[[setup]]
+reboot = false
+description = "pre-create the capture feed's append targets"
+command = "for f in cap.env cap.dmesg cap.dmesg.post cap.manager cap.kallsyms cap.iomem cap.slabinfo cap.zoneinfo cap.buddy cap.config cap.btf cap.umh cap.insmod cap.pstore cap.policy cap.sidtab cap.umhobs cap.minimal su_daemon.log ksu-late-load.log boot-marker.log .su_req; do : > @DEV_TMP@/$f; done; echo ffwheel-setup capture files ready"
 needs_root = false
 once_per_boot = false
