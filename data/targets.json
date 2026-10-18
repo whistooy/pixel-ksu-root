@@ -9,6 +9,7 @@
       "payload": "CPH2581-15.0.0.860",
       "fingerprint": "OnePlus/CPH2581EEA/OP595DL1:15/AP3A.240617.008/U.R4T3.394441b-19c1836-19c196e:user/release-keys",
       "payload_env": "FFREAD_GUESS_ORACLE=1 FFROOT_TRIGGER_TRIES=12",
+      "policy_source": "/odm/etc/selinux/precompiled_sepolicy",
       "extras": [
         "cves/targets/CPH2581-15.0.0.860/feed/root-feed-1.sh",
         "cves/targets/CPH2581-15.0.0.860/feed/root-feed-2.sh",

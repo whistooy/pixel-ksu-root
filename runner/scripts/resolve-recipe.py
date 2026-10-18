@@ -1136,6 +1136,10 @@ def main():
         if not isinstance(target_env, str):
             die("ARCH-G0-SCHEMA",
                 "target %r payload_env must be a string" % target)
+        policy_source = device_field(target, "policy_source", "")
+        if not isinstance(policy_source, str):
+            die("ARCH-G0-SCHEMA",
+                "target %r policy_source must be a string" % target)
         extras = device_field(target, "extras", [])
         if not isinstance(extras, list) or not all(
                 isinstance(e, str) for e in extras):
@@ -1168,6 +1172,9 @@ def main():
             # Per-target row facts: launch env and files pushed with the entry.
             ("RUN_TARGET_ENV", target_env),
             ("RUN_EXTRAS", " ".join(extras)),
+            # The device file the runner pulls to build policy.permissive,
+            # when the operator asks for the opt-in policy load.
+            ("RUN_POLICY_SOURCE", policy_source),
             # The knob set, and its types and domains, as data the runner
             # validates --tunable against. RUN_TUNABLE_SPEC entries are
             # NAME|type|domain, domain being "a,b" for an enum, "min,max" for

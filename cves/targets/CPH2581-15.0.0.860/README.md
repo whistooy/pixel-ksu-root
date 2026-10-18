@@ -16,6 +16,7 @@ FFROOT_RESOLVED_PAGE=1
 
 A CONFIRMED runs the full chain (avtab grants, uid0 + full caps in
 u:r:shell:s0, enforcing untouched). Tune one knob at a time.
+
 ## Capture feed
 
 feed/*.sh runs after a landed session (root-feed-1: enforcing snapshot,
@@ -25,6 +26,9 @@ sh /data/local/tmp/su.sh "id".
 
 The ladder loads KernelSU with the ksud the runner derived from the
 installed manager (libksud.so -> /data/local/tmp/ksud-manager); late-load
-carries its own module. A pushed kernelsu.ko selects the explicit-insmod
-form; do not stage the official tiann module, the installed manager rejects
-its cert.
+carries its own module. A staged kernelsu.ko selects the explicit-insmod
+form; do not stage the official tiann module, the manager rejects its cert.
+
+The policy load runs by default: the runner builds policy.permissive from
+the device's own policy and pushes it. FFROOT_MINIMAL=1 (or
+FFROOT_POLICY_LOAD=0) keeps the grants-only session instead.

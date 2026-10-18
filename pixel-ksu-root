@@ -37,7 +37,8 @@
 #                template's env prefix. Rejected before the phone is touched if
 #                the name is not in the resolved stage's [tunables].env or not
 #                a string in the payload artifact about to be pushed.
-#                Works with and without --recipe. The ones that decide the run:
+#                A target row's payload_env is seeded in front of these, so an
+#                operator override always wins. Works with and without --recipe. The ones that decide the run:
 #                  RECLAIM_VEHICLE=<name>          which syscall re-occupies the
 #                                freed rt_mutex_waiter frame; an unknown value
 #                                refuses the shot. The value set is declared in
@@ -554,6 +555,32 @@ if [ "$INVOKE_KIND" = device-exec ]; then
       *.sh) ash "chmod 755 $DEV_TMP/$(basename "$x")" 2>/dev/null ;;
     esac
   done
+  # policy.permissive is staged by default: the payload's policy load runs
+  # unless the operator asks for the grants-only session (FFROOT_MINIMAL=1 or
+  # FFROOT_POLICY_LOAD=0). Built here from the device's own policy
+  # (target-row policy_source).
+  case " $PAYLOAD_ENV " in
+    *" FFROOT_MINIMAL=1 "*|*" FFROOT_MINIMAL=true "*|*" FFROOT_MINIMAL=yes "*|*" FFROOT_POLICY_LOAD=0 "*|*" FFROOT_POLICY_LOAD=false "*|*" FFROOT_POLICY_LOAD=no "*)
+      ;;
+    *)
+      if [ -n "${ENTRY_POLICY_SOURCE:-}" ]; then
+        step "Build policy.permissive from the device policy"
+        if "${ADB[@]}" pull "$ENTRY_POLICY_SOURCE" "$WORKDIR/precompiled_sepolicy" >/dev/null 2>&1; then
+          if python3 "$REPO/runner/scripts/patch-policy.py" \
+               "$WORKDIR/precompiled_sepolicy" -o "$WORKDIR/policy.permissive" \
+               >"$WORKDIR/patch-policy.log" 2>&1; then
+            grep -E "PATCHED|verify" "$WORKDIR/patch-policy.log" | strip | tee_log || true
+            apush_verified "$WORKDIR/policy.permissive" "$DEV_TMP/policy.permissive" \
+              || warn "  policy.permissive push failed"
+          else
+            warn "  policy patch failed; the payload will log the missing file"
+            strip < "$WORKDIR/patch-policy.log" | tee_log || true
+          fi
+        else
+          warn "  policy pull failed ($ENTRY_POLICY_SOURCE); the payload will log the missing file"
+        fi
+      fi ;;
+  esac
   # A device-exec entry that runs the exploit payload (the bench forks
   # cve-helper --run-payload exploit-payload.so) declares needs_payload, so the
   # freshly built payload and helper are staged here too -- apush_verified

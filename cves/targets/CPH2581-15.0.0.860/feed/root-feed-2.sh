@@ -1,7 +1,6 @@
 #!/system/bin/sh
 # Feed section 2: the landed session (uid0 + caps, shell domain). Captures
-# append to pre-created cap.* files; the ladder loads KernelSU first (the
-# module comes from ksud itself unless a kernelsu.ko was staged).
+# append to pre-created cap.* files; the ladder loads KernelSU first.
 # FFROOT_MINIMAL=1 skips the ladder (grants-only session).
 # FFROOT_MINIMAL=1 skips the ladder (grants-only session).
 date

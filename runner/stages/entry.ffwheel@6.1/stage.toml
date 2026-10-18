@@ -140,6 +140,9 @@ mode = "755"
 # operator selected (--manager, or detection). Naming any of them here would pin
 # the stage to one phone and one manager and load the wrong module elsewhere.
 # Empty (a hunt with no manager) means the half skips the load and says so.
+# The capture feed comes from the target row's extras; the policy load's
+# policy.permissive is built by the runner from the target's policy_source
+# and runs unless FFROOT_MINIMAL=1 / FFROOT_POLICY_LOAD=0.
 # FFROOT_TRIGGER_TRIES: the writer reads its forge page's witness cell after each
 # trigger and repeats the probe/free/reclaim while the redirect has not landed,
 # instead of firing the write blind on the first attempt. Safe to repeat here:
