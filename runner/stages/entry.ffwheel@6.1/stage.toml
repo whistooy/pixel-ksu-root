@@ -116,6 +116,9 @@ forbids = []
 [properties]
 retry_safe  = true
 panic_risk  = { pre_slide = "high", post_slide = "high" }
+# A landed shot still has the feed ladder and captures to run; run-shot
+# stretched its window to 420s on the landed marker, so do the same here.
+shot_timeout = 420
 destructive = ["uhid UAF collateral (may panic InputReader)", "reader mm->mm_mt.ma_root overwritten (parks)", "cross-cache/guess miss -> panic"]
 restores    = []
 # The writer self-loads KernelSU while unconfined uid 0, so this entry provides
