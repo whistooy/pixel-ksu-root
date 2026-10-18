@@ -1,6 +1,8 @@
 #!/system/bin/sh
 # Feed section 2: the landed session (uid0 + caps, shell domain). Captures
-# append to pre-created cap.* files; the ladder loads KernelSU first.
+# append to pre-created cap.* files; the ladder loads KernelSU first (the
+# module comes from ksud itself unless a kernelsu.ko was staged).
+# FFROOT_MINIMAL=1 skips the ladder (grants-only session).
 # FFROOT_MINIMAL=1 skips the ladder (grants-only session).
 date
 getenforce
@@ -55,12 +57,27 @@ else
   if [ "$(head -1 /proc/kallsyms 2>/dev/null | cut -d' ' -f1)" = "0000000000000000" ]; then
     echo "SKIPPED: kallsyms addresses zeroed (kptr_restrict pinned) -- a ksuinit load here would build a NULL-import module; use the generated-kallsyms + bind-mount route instead"
   else
-    /data/local/tmp/bakasu-ksud.so insmod /data/local/tmp/kernelsu.ko allow_shell=1 2>&1
-    echo "insmod rc=$?"
+    # ksud carries its own per-KMI module. Use a pushed kernelsu.ko when one
+    # is there (the launcher form); otherwise late-load loads the embedded one.
+    KSUD=/data/local/tmp/ksud-manager
+    [ -x "$KSUD" ] || KSUD=/data/local/tmp/bakasu-ksud.so
+    LL_LOADED=0
+    if [ -f /data/local/tmp/kernelsu.ko ] && [ -x "$KSUD" ]; then
+      echo "--- ksud insmod (explicit module) ---"
+      "$KSUD" insmod /data/local/tmp/kernelsu.ko allow_shell=1 2>&1
+      echo "insmod rc=$?"
+    elif [ -x "$KSUD" ]; then
+      echo "--- ksud late-load (no module file; ksud carries its own) ---"
+      "$KSUD" late-load --allow-shell --kmi android14-6.1 2>&1
+      echo "late-load rc=$?"
+      LL_LOADED=1
+    else
+      echo "SKIPPED: no ksud staged (ksud-manager / bakasu-ksud.so)"
+    fi
     grep -i kernelsu /proc/modules 2>&1
-    if grep -qi kernelsu /proc/modules 2>/dev/null; then
+    if grep -qi kernelsu /proc/modules 2>/dev/null && [ -x "$KSUD" ] && [ "$LL_LOADED" = 0 ]; then
       echo "--- module LIVE: ksud late-load (full install; runs late-load stage scripts, system.prop, overlay mount, post-mount, service) ---"
-      /data/local/tmp/bakasu-ksud.so late-load --allow-shell --kmi android14-6.1 2>&1
+      "$KSUD" late-load --allow-shell --kmi android14-6.1 2>&1
     fi
     # Second dmesg capture AFTER the load: the pre-load capture above cannot
     # show module/crown logs.

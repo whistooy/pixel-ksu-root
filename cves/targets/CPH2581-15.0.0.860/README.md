@@ -16,10 +16,15 @@ FFROOT_RESOLVED_PAGE=1
 
 A CONFIRMED runs the full chain (avtab grants, uid0 + full caps in
 u:r:shell:s0, enforcing untouched). Tune one knob at a time.
-
 ## Capture feed
 
 feed/*.sh runs after a landed session (root-feed-1: enforcing snapshot,
 root-feed-2: landed session + su_daemon). The runner pushes it and the
 stage setup pre-creates the cap.* files it appends to. Daemon client:
 sh /data/local/tmp/su.sh "id".
+
+The ladder loads KernelSU with the ksud the runner derived from the
+installed manager (libksud.so -> /data/local/tmp/ksud-manager); late-load
+carries its own module. A pushed kernelsu.ko selects the explicit-insmod
+form; do not stage the official tiann module, the installed manager rejects
+its cert.
